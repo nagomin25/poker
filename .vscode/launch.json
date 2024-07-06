@@ -15,7 +15,8 @@
             "name": "HelloWorld",
             "request": "launch",
             "mainClass": "com.example.HelloWorld",
-            "projectName": "poker"
+            "projectName": "poker",
+            "vmArgs": "-XstartOnFirstThread"
         },
         {
             "type": "java",
