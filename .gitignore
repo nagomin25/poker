@@ -18,4 +18,7 @@
 .history
 .ionide
 
+#その他
+/pom.xml
+
 # End of https://www.toptal.com/developers/gitignore/api/visualstudiocode
