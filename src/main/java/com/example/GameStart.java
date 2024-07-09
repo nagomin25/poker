@@ -1,14 +1,14 @@
 package com.example;
 
-import java.nio.IntBuffer;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-
 import org.lwjgl.*;
 import org.lwjgl.glfw.*;
 import org.lwjgl.opengl.*;
 import org.lwjgl.system.*;
+
+import java.nio.IntBuffer;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
 
 import static org.lwjgl.glfw.Callbacks.*;
 import static org.lwjgl.glfw.GLFW.*;
@@ -20,6 +20,7 @@ public class GameStart {
         
 	// The window handle
 	private long window;
+	private CardRenderer cardRenderer;
 
 	public void run() {
 		System.out.println("Hello LWJGL " + Version.getVersion() + "!");
@@ -88,46 +89,39 @@ public class GameStart {
 		// Make the window visible
 		glfwShowWindow(window);
 
+		GL.createCapabilities();
+
+		float windowAspectRatio = 800.0f / 600.0f; // 4:3
+		cardRenderer = new CardRenderer(windowAspectRatio);
+
+		//deck作成
+		LinkedList<Card> deck = Card.createDeck();
+		List<Card> hands = new ArrayList<>(2);
+		hands.add(deck.poll());
+		hands.add(deck.poll());
+		Player player = new Player();
+		player.setHands(hands);
+		System.out.println(player.getHands());
+
+
+		cardRenderer.init(player.getHands());
+
+
 	}
 
 	private void loop() {
-		// This line is critical for LWJGL's interoperation with GLFW's
-		// OpenGL context, or any context that is managed externally.
-		// LWJGL detects the context that is current in the current thread,
-		// creates the GLCapabilities instance and makes the OpenGL
-		// bindings available for use.
-		GL.createCapabilities();
-
 		// Set the clear color
 		glClearColor(0.0f, 0.2f, 0.0f, 1.0f);
-
-        //ランダムなデッキの作成
-        LinkedList<Card> deck = Card.createDeck();
-
-        List<Card> hands = new ArrayList<>(2);
-        hands.add(deck.poll());
-        hands.add(deck.poll());
-        //仮プレーヤーの作成
-        Player player = new Player();
-
-        player.setHands(hands);
-        System.out.println(player.getHands());
 
 		// Run the rendering loop until the user has attempted to close
 		// the window or has pressed the ESCAPE key.
 		while (!glfwWindowShouldClose(window)) {
-			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear the framebuffer
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-			glfwSwapBuffers(window); // swap the color buffers
+			cardRenderer.render();
 
-			// Poll for window events. The key callback above will only be
-			// invoked during this call.
+			glfwSwapBuffers(window);
 			glfwPollEvents();
-
-            glfwSetKeyCallback(window, (window, key, scancode, action, mods) -> {
-                if (key == GLFW_KEY_SPACE && action == GLFW_RELEASE)
-                    glfwSetWindowShouldClose(window, true); // We will detect this in the rendering loop
-            });
 		}
 	}
 
@@ -136,5 +130,3 @@ public class GameStart {
 	}
 
     }
-
-
