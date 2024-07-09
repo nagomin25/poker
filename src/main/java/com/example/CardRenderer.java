@@ -61,6 +61,9 @@ public class CardRenderer {
 
 
 	public void render() {
+		if (textures.isEmpty()) {
+			return; // カードがない場合は何もレンダリングしない
+		}
 		float cardAspectRatio = 2.0f / 3.0f;
 		float cardHeight = 0.6f; // 画面の高さの60%
 		float cardWidth = (cardHeight * cardAspectRatio) / windowAspectRatio;

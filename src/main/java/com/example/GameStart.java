@@ -21,6 +21,9 @@ public class GameStart {
 	// The window handle
 	private long window;
 	private CardRenderer cardRenderer;
+	private LinkedList<Card> deck;
+	private Player player;
+	private boolean cardsDealt = false;
 
 	public void run() {
 		System.out.println("Hello LWJGL " + Version.getVersion() + "!");
@@ -61,6 +64,8 @@ public class GameStart {
 		glfwSetKeyCallback(window, (window, key, scancode, action, mods) -> {
 			if (key == GLFW_KEY_ESCAPE && action == GLFW_RELEASE)
 				glfwSetWindowShouldClose(window, true); // We will detect this in the rendering loop
+			if (key == GLFW_KEY_SPACE && action == GLFW_PRESS && !cardsDealt)
+				dealCardsToPlayer();
 		});
 
 		// Get the thread stack and push a new frame
@@ -94,19 +99,27 @@ public class GameStart {
 		float windowAspectRatio = 800.0f / 600.0f; // 4:3
 		cardRenderer = new CardRenderer(windowAspectRatio);
 
-		//deck作成
-		LinkedList<Card> deck = Card.createDeck();
-		List<Card> hands = new ArrayList<>(2);
-		hands.add(deck.poll());
-		hands.add(deck.poll());
-		Player player = new Player();
-		player.setHands(hands);
-		System.out.println(player.getHands());
+		deck = Card.createDeck();
+		player = new Player();
+		cardRenderer.init(new ArrayList<>());
+	}
 
-
-		cardRenderer.init(player.getHands());
-
-
+	private List<Card> dealCardsToPlayer() {
+		if (!cardsDealt && deck.size() >= 2) {
+			List<Card> hands = new ArrayList<>(2);
+			hands.add(deck.poll());
+			hands.add(deck.poll());
+			player.setHands(hands);
+			System.out.println("Cards dealt: " + player.getHands());
+			cardsDealt = true; // カードが配られたことを記録
+			return hands;
+		} else if (cardsDealt) {
+			System.out.println("Cards have already been dealt.");
+			return null;
+		} else {
+			System.out.println("Not enough cards in the deck!");
+			return null;
+		}
 	}
 
 	private void loop() {
@@ -118,8 +131,11 @@ public class GameStart {
 		while (!glfwWindowShouldClose(window)) {
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+			if(cardsDealt){
+				cardRenderer.init(player.getHands());
+			}
 			cardRenderer.render();
-
+         
 			glfwSwapBuffers(window);
 			glfwPollEvents();
 		}
