@@ -3,7 +3,7 @@ package com.example;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Player {
+public class Enemy {
 
     private final List<Card> hands = new ArrayList<>(2);
     private int chips = 20000;
@@ -19,11 +19,9 @@ public class Player {
     public void setChips(int chips) {
         this.chips = chips;
     }
+
     @Override
     public String toString() {
-        return "Player [hands=" + hands + ", chips=" + chips + "]";
+        return "Enemy [hands=" + hands + ", chips=" + chips + "]";
     }
-
-    
-
 }

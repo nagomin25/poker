@@ -6,9 +6,7 @@ import org.lwjgl.opengl.*;
 import org.lwjgl.system.*;
 
 import java.nio.IntBuffer;
-import java.util.ArrayList;
 import java.util.LinkedList;
-import java.util.List;
 
 import static org.lwjgl.glfw.Callbacks.*;
 import static org.lwjgl.glfw.GLFW.*;
@@ -21,9 +19,14 @@ public class GameStart {
 	// The window handle
 	private long window;
 	private CardRenderer cardRenderer;
+	private EnemyCardRenderer enemyCardRenderer;
 	private LinkedList<Card> deck;
 	private Player player;
 	private boolean cardsDealt = false;
+	private boolean cardsDealtToEnemy = false;
+	private Dealer dealer;
+	private Enemy enemy;
+	private boolean initializedRenderers = false;
 
 	public void run() {
 		System.out.println("Hello LWJGL " + Version.getVersion() + "!");
@@ -59,14 +62,20 @@ public class GameStart {
 		if (window == NULL)
 			throw new RuntimeException("Failed to create the GLFW window");
 
+		dealer = new Dealer();
+
 		// Setup a key callback. It will be called every time a key is pressed, repeated
 		// or released.
-		glfwSetKeyCallback(window, (window, key, scancode, action, mods) -> {
-			if (key == GLFW_KEY_ESCAPE && action == GLFW_RELEASE)
-				glfwSetWindowShouldClose(window, true); // We will detect this in the rendering loop
-			if (key == GLFW_KEY_SPACE && action == GLFW_PRESS && !cardsDealt)
-				dealCardsToPlayer();
-		});
+        glfwSetKeyCallback(window, (window, key, scancode, action, mods) -> {
+            if (key == GLFW_KEY_ESCAPE && action == GLFW_RELEASE)
+                glfwSetWindowShouldClose(window, true);
+            if (key == GLFW_KEY_SPACE && action == GLFW_PRESS && !cardsDealt) {
+                dealer.dealCardsToPlayer(cardsDealt, deck, player);
+                dealer.dealCardsToEnemy(cardsDealtToEnemy, deck, enemy);
+                cardsDealt = true;
+                cardsDealtToEnemy = true;
+            }
+        });
 
 		// Get the thread stack and push a new frame
 		try (MemoryStack stack = stackPush()) {
@@ -96,30 +105,14 @@ public class GameStart {
 
 		GL.createCapabilities();
 
-		float windowAspectRatio = 800.0f / 600.0f; // 4:3
-		cardRenderer = new CardRenderer(windowAspectRatio);
-
 		deck = Card.createDeck();
 		player = new Player();
-		cardRenderer.init(new ArrayList<>());
-	}
-
-	private List<Card> dealCardsToPlayer() {
-		if (!cardsDealt && deck.size() >= 2) {
-			List<Card> hands = new ArrayList<>(2);
-			hands.add(deck.poll());
-			hands.add(deck.poll());
-			player.setHands(hands);
-			System.out.println("Cards dealt: " + player.getHands());
-			cardsDealt = true; // カードが配られたことを記録
-			return hands;
-		} else if (cardsDealt) {
-			System.out.println("Cards have already been dealt.");
-			return null;
-		} else {
-			System.out.println("Not enough cards in the deck!");
-			return null;
-		}
+		enemy = new Enemy();
+        // レンダラーの初期化はここでは行わない
+        float windowAspectRatio = 800.0f / 600.0f;
+        cardRenderer = new CardRenderer(windowAspectRatio);
+        enemyCardRenderer = new EnemyCardRenderer(windowAspectRatio);
+		
 	}
 
 	private void loop() {
@@ -130,12 +123,18 @@ public class GameStart {
 		// the window or has pressed the ESCAPE key.
 		while (!glfwWindowShouldClose(window)) {
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-			if(cardsDealt){
+	
+			if (cardsDealt && !initializedRenderers) {
 				cardRenderer.init(player.getHands());
+				enemyCardRenderer.init();
+				initializedRenderers = true;
 			}
-			cardRenderer.render();
-         
+	
+			if (initializedRenderers) {
+				cardRenderer.render();
+				enemyCardRenderer.render();
+			}
+	
 			glfwSwapBuffers(window);
 			glfwPollEvents();
 		}
