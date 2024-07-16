@@ -27,6 +27,7 @@ public class GameStart {
 	private Dealer dealer;
 	private Enemy enemy;
 	private boolean initializedRenderers = false;
+	private ChipRenderer chipRenderer;
 
 	public void run() {
 		System.out.println("Hello LWJGL " + Version.getVersion() + "!");
@@ -36,6 +37,7 @@ public class GameStart {
 
 		// Free the window callbacks and destroy the window
 		glfwFreeCallbacks(window);
+		chipRenderer.cleanup();
 		glfwDestroyWindow(window);
 
 		// Terminate GLFW and free the error callback
@@ -112,6 +114,9 @@ public class GameStart {
         float windowAspectRatio = 800.0f / 600.0f;
         cardRenderer = new CardRenderer(windowAspectRatio);
         enemyCardRenderer = new EnemyCardRenderer(windowAspectRatio);
+
+		chipRenderer = new ChipRenderer(800.0f / 600.0f);
+		chipRenderer.init();
 		
 	}
 
@@ -133,7 +138,11 @@ public class GameStart {
 			if (initializedRenderers) {
 				cardRenderer.render();
 				enemyCardRenderer.render();
+				cardRenderer.render();
+				enemyCardRenderer.render();
+				chipRenderer.render(player.getChips());
 			}
+
 	
 			glfwSwapBuffers(window);
 			glfwPollEvents();
